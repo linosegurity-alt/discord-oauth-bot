@@ -1,4 +1,3 @@
-
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -9,6 +8,23 @@ const REDIRECT_URI = 'https://discord-oauth-bot-ni1m.onrender.com/callback';
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
 const FIREBASE_URL = process.env.FIREBASE_URL;
+
+async function refreshToken(userId, refreshToken) {
+  const res = await axios.post('https://discord.com/api/oauth2/token',
+    new URLSearchParams({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
+  await axios.put(`${FIREBASE_URL}/tokens/${userId}.json`, {
+    access_token: res.data.access_token,
+    refresh_token: res.data.refresh_token,
+  });
+  return res.data.access_token;
+}
 
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -25,6 +41,7 @@ app.get('/callback', async (req, res) => {
     );
 
     const accessToken = tokenRes.data.access_token;
+    const refresh = tokenRes.data.refresh_token;
 
     const userRes = await axios.get('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` }
@@ -40,6 +57,7 @@ app.get('/callback', async (req, res) => {
 
     await axios.put(`${FIREBASE_URL}/tokens/${userId}.json`, {
       access_token: accessToken,
+      refresh_token: refresh,
       username: userRes.data.username
     });
 
@@ -63,9 +81,14 @@ app.get('/add-all', async (req, res) => {
 
     for (const userId in tokens) {
       try {
+        let accessToken = tokens[userId].access_token;
+        try {
+          accessToken = await refreshToken(userId, tokens[userId].refresh_token);
+        } catch(e) {}
+        
         await axios.put(
           `https://discord.com/api/guilds/${newGuild}/members/${userId}`,
-          { access_token: tokens[userId].access_token },
+          { access_token: accessToken },
           { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
         );
         count++;
