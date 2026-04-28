@@ -410,6 +410,14 @@ app.get('/callback', async (req, res) => {
       verified_at: new Date().toISOString()
     });
 
+    try {
+      await axios.put(
+        `https://discord.com/api/guilds/${GUILD_ID}/members/${userId}/roles/1498558547116429352`,
+        {},
+        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+      );
+    } catch(e) {}
+
     res.send(`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
