@@ -2,11 +2,11 @@ const express = require('express');
 const axios = require('axios');
 const app = express();
 
-const CLIENT_ID = 'SEU_CLIENT_ID';
-const CLIENT_SECRET = 'SEU_CLIENT_SECRET';
-const REDIRECT_URI = 'SUA_URL_DO_RENDER/callback';
-const BOT_TOKEN = 'SEU_BOT_TOKEN';
-const GUILD_ID = 'ID_DO_SEU_SERVIDOR';
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = 'https://discord-oauth-bot-ni1m.onrender.com/callback';
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const GUILD_ID = process.env.GUILD_ID;
 
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
