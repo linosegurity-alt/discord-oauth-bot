@@ -555,6 +555,17 @@ app.get('/admin', (req, res) => {
       </div>
     </div>
 
+    <!-- Adicionar bot -->
+    <div class="section">
+      <div class="section-title">🤖 Adicionar Bot ao Servidor</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Cole o ID do servidor e gere o link para adicionar o bot.</p>
+      <div class="form-row">
+        <input class="form-input" type="text" id="bot-guild" placeholder="ID do servidor">
+        <button class="btn-action" onclick="addBot()">🔗 Gerar Link</button>
+      </div>
+      <div class="result-box" id="bot-result" style="word-break:break-all"></div>
+    </div>
+
     <!-- Link de verificação -->
     <div class="section">
       <div class="section-title">🔗 Link de Verificação</div>
@@ -631,6 +642,15 @@ app.get('/admin', (req, res) => {
     result.textContent = '✅ ' + text;
     btn.disabled = false;
     btn.textContent = '🚀 Restaurar';
+  }
+
+  function addBot() {
+    const guild = document.getElementById('bot-guild').value.trim();
+    if (!guild) { alert('Cole o ID do servidor!'); return; }
+    const link = 'https://discord.com/oauth2/authorize?client_id=1498146658783858708&scope=bot&permissions=8&guild_id=' + guild;
+    const result = document.getElementById('bot-result');
+    result.style.display = 'block';
+    result.innerHTML = '🔗 <a href="' + link + '" target="_blank" style="color:#a78bfa">Clique aqui para adicionar o bot</a>';
   }
 
   function copyLink() {
