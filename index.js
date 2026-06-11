@@ -35,339 +35,490 @@ app.get('/', (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lino Security — Verificação</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #07050f;
-      --card: #0f0a1e;
-      --border: rgba(139, 92, 246, 0.25);
-      --purple: #8b5cf6;
-      --purple-light: #a78bfa;
-      --purple-dark: #6d28d9;
-      --glow: rgba(139, 92, 246, 0.4);
-      --text: #f0ebff;
-      --muted: #9d8fbe;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #04020d;
+      --surface: #0b0720;
+      --border: rgba(120, 80, 255, 0.18);
+      --purple: #7c4dff;
+      --purple2: #b47cff;
+      --cyan: #00e5ff;
+      --text: #ece8ff;
+      --muted: #7a6fa0;
+    }
 
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Space Grotesk', sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      position: relative;
     }
 
-    /* Animated background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(ellipse at 30% 20%, rgba(109, 40, 217, 0.15) 0%, transparent 50%),
-                  radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-      animation: bgPulse 8s ease-in-out infinite alternate;
-      z-index: 0;
-    }
-
-    @keyframes bgPulse {
-      0% { transform: scale(1) rotate(0deg); }
-      100% { transform: scale(1.1) rotate(3deg); }
-    }
-
-    /* Grid pattern */
-    body::after {
-      content: '';
+    /* ── CANVAS DE PARTÍCULAS ── */
+    #canvas {
       position: fixed;
       inset: 0;
-      background-image: linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
-      background-size: 40px 40px;
       z-index: 0;
+      pointer-events: none;
     }
 
-    .container {
+    /* ── GLOW RADIAL ── */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124,77,255,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,229,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ── GRID ── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(124,77,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,77,255,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* ── CARD ── */
+    .card {
       position: relative;
       z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      width: 100%;
-    }
-
-    /* Floating orbs */
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.4;
-      z-index: 0;
-      animation: float 10s ease-in-out infinite;
-    }
-    .orb-1 { width: 300px; height: 300px; background: #6d28d9; top: -100px; left: -100px; animation-delay: 0s; }
-    .orb-2 { width: 200px; height: 200px; background: #8b5cf6; bottom: -50px; right: -50px; animation-delay: 3s; }
-    .orb-3 { width: 150px; height: 150px; background: #4c1d95; top: 50%; left: 50%; animation-delay: 6s; }
-
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(20px, -20px) scale(1.05); }
-      66% { transform: translate(-15px, 15px) scale(0.95); }
-    }
-
-    .card {
-      background: var(--card);
+      width: 420px;
+      max-width: calc(100vw - 32px);
+      padding: 52px 40px 44px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 48px 40px;
-      max-width: 440px;
-      width: 100%;
+      border-radius: 28px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(139, 92, 246, 0.1), 0 20px 60px rgba(0,0,0,0.5);
-      animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      box-shadow: 0 0 80px rgba(124,77,255,0.12), 0 30px 80px rgba(0,0,0,0.6);
+      animation: cardIn 0.9s cubic-bezier(0.16,1,0.3,1) both;
     }
 
     @keyframes cardIn {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      from { opacity: 0; transform: translateY(40px) scale(0.94); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
+    /* top shimmer line */
     .card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 15%; right: 15%;
       height: 1px;
-      background: linear-gradient(90deg, transparent, var(--purple), transparent);
+      background: linear-gradient(90deg, transparent, var(--purple2), var(--cyan), var(--purple2), transparent);
+      border-radius: 999px;
+      animation: shimmer 3s ease-in-out infinite;
     }
 
+    @keyframes shimmer {
+      0%,100% { opacity: 0.5; left: 15%; right: 15%; }
+      50%      { opacity: 1;   left: 5%;  right: 5%; }
+    }
+
+    /* ── SHIELD ICON (SVG animado) ── */
     .shield-wrap {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 24px;
-      background: linear-gradient(135deg, rgba(109,40,217,0.3), rgba(139,92,246,0.1));
-      border: 1px solid rgba(139,92,246,0.4);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      animation: shieldPulse 3s ease-in-out infinite;
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 28px;
       position: relative;
+      animation: iconIn 0.7s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
     }
 
-    .shield-wrap::after {
-      content: '';
+    @keyframes iconIn {
+      from { opacity: 0; transform: scale(0.5) rotate(-15deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    .shield-bg {
       position: absolute;
-      inset: -1px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, rgba(139,92,246,0.5), transparent);
-      z-index: -1;
-      filter: blur(8px);
+      inset: 0;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(124,77,255,0.25), rgba(0,229,255,0.08));
+      border: 1px solid rgba(124,77,255,0.35);
+      animation: shieldPulse 3s ease-in-out infinite;
     }
 
     @keyframes shieldPulse {
-      0%, 100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-      50% { box-shadow: 0 0 40px rgba(139,92,246,0.6); }
+      0%,100% { box-shadow: 0 0 20px rgba(124,77,255,0.2); }
+      50%      { box-shadow: 0 0 44px rgba(124,77,255,0.5), 0 0 80px rgba(0,229,255,0.1); }
     }
 
+    .shield-svg {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      padding: 18px;
+    }
+
+    /* scan line inside shield */
+    .scan-line {
+      position: absolute;
+      left: 14px; right: 14px;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      top: 18px;
+      animation: scan 2.4s ease-in-out infinite;
+      border-radius: 999px;
+    }
+
+    @keyframes scan {
+      0%   { top: 18px; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: calc(100% - 18px); opacity: 0; }
+    }
+
+    /* ── BRAND / TÍTULO ── */
     .brand {
-      font-family: 'Syne', sans-serif;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: 4px;
+      letter-spacing: 5px;
       text-transform: uppercase;
-      color: var(--purple-light);
-      margin-bottom: 8px;
-      opacity: 0;
-      animation: fadeUp 0.6s 0.3s forwards;
+      color: var(--cyan);
+      opacity: 0.7;
+      margin-bottom: 10px;
+      animation: fadeUp 0.5s 0.4s both;
     }
 
     h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: 32px;
-      font-weight: 800;
-      color: var(--text);
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.15;
       margin-bottom: 12px;
-      line-height: 1.1;
-      opacity: 0;
-      animation: fadeUp 0.6s 0.4s forwards;
+      animation: fadeUp 0.5s 0.5s both;
     }
 
-    h1 span {
-      background: linear-gradient(135deg, #a78bfa, #8b5cf6, #6d28d9);
+    h1 .accent {
+      background: linear-gradient(90deg, var(--purple2), var(--cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .desc {
+      font-size: 13.5px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-      opacity: 0;
-      animation: fadeUp 0.6s 0.5s forwards;
+      line-height: 1.65;
+      margin-bottom: 36px;
+      animation: fadeUp 0.5s 0.55s both;
     }
 
+    /* ── STEPS ── */
     .steps {
       display: flex;
+      align-items: flex-start;
       justify-content: center;
-      gap: 20px;
-      margin-bottom: 32px;
-      opacity: 0;
-      animation: fadeUp 0.6s 0.6s forwards;
+      gap: 0;
+      margin-bottom: 36px;
+      animation: fadeUp 0.5s 0.6s both;
     }
 
     .step {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      flex: 1;
     }
 
-    .step-num {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: rgba(139,92,246,0.2);
-      border: 1px solid rgba(139,92,246,0.4);
+    .step-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(124,77,255,0.12);
+      border: 1px solid rgba(124,77,255,0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--purple-light);
-      font-family: 'Syne', sans-serif;
+      transition: all 0.3s;
     }
+
+    .step-icon svg { width: 18px; height: 18px; }
 
     .step-label {
-      font-size: 10px;
+      font-size: 10.5px;
       color: var(--muted);
       text-align: center;
-      max-width: 70px;
+      max-width: 72px;
+      line-height: 1.4;
     }
 
-    .step-line {
-      width: 30px;
+    .step-connector {
+      width: 32px;
       height: 1px;
-      background: rgba(139,92,246,0.3);
-      margin-top: 14px;
+      background: linear-gradient(90deg, rgba(124,77,255,0.3), rgba(0,229,255,0.2));
+      margin-top: 21px;
+      flex-shrink: 0;
     }
 
+    /* ── BOTÃO ── */
     .btn {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 10px;
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      color: white;
-      padding: 16px 32px;
-      border-radius: 12px;
-      text-decoration: none;
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
+      justify-content: center;
+      gap: 11px;
+      width: 100%;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #6b3de8, #5a2fd8);
+      border: 1px solid rgba(180,124,255,0.35);
+      border-radius: 14px;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 15px;
-      letter-spacing: 0.5px;
-      transition: all 0.3s;
-      border: 1px solid rgba(139,92,246,0.5);
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      cursor: pointer;
       position: relative;
       overflow: hidden;
-      opacity: 0;
-      animation: fadeUp 0.6s 0.7s forwards;
-      width: 100%;
-      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeUp 0.5s 0.7s both;
     }
 
     .btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transition: 0.5s;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 60%);
+      pointer-events: none;
     }
 
-    .btn:hover::before { left: 100%; }
+    /* moving shine */
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: btnShine 2.8s ease-in-out infinite 1.5s;
+    }
+
+    @keyframes btnShine {
+      0%   { left: -80%; }
+      100% { left: 140%; }
+    }
+
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(109,40,217,0.5);
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      box-shadow: 0 12px 36px rgba(107,61,232,0.55);
     }
-
     .btn:active { transform: translateY(0); }
 
-    .discord-icon {
-      width: 20px;
-      height: 20px;
-      fill: white;
+    .btn-discord-icon { width: 22px; height: 22px; flex-shrink: 0; }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(122,111,160,0.5);
+      animation: fadeUp 0.5s 0.8s both;
     }
 
-    .footer {
-      margin-top: 24px;
-      font-size: 11px;
-      color: rgba(157,143,190,0.5);
-      opacity: 0;
-      animation: fadeUp 0.6s 0.8s forwards;
-    }
+    .footer svg { width: 12px; height: 12px; opacity: 0.5; }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── FLOATING ORBS ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 350px; height: 350px; background: rgba(124,77,255,0.18); top: -120px; left: -80px; animation: orbFloat 12s ease-in-out infinite; }
+    .orb-2 { width: 250px; height: 250px; background: rgba(0,229,255,0.1); bottom: -60px; right: -60px; animation: orbFloat 9s ease-in-out infinite reverse; }
+
+    @keyframes orbFloat {
+      0%,100% { transform: translate(0,0); }
+      50%      { transform: translate(30px,-30px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
 
-  <div class="container">
-    <div class="card">
-      <div class="shield-wrap">🛡️</div>
-      <div class="brand">Lino Security</div>
-      <h1>Verificação <span>Discord</span></h1>
-      <p class="desc">Para acessar o servidor, você precisa verificar sua conta Discord. O processo é rápido e seguro.</p>
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<canvas id="canvas"></canvas>
 
-      <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-label">Clique em verificar</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-label">Autorize no Discord</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-label">Acesso liberado</div>
-        </div>
-      </div>
+<div class="card">
 
-      <a class="btn" href="https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify%20guilds.join">
-        <svg class="discord-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.013.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+  <!-- Shield SVG animado -->
+  <div class="shield-wrap">
+    <div class="shield-bg"></div>
+    <div class="scan-line"></div>
+    <svg class="shield-svg" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- shield outline -->
+      <path d="M26 4L6 12V26C6 36.5 15 44.8 26 48C37 44.8 46 36.5 46 26V12L26 4Z"
+        stroke="url(#sg)" stroke-width="1.8" stroke-linejoin="round" fill="rgba(124,77,255,0.08)"/>
+      <!-- check mark -->
+      <path d="M17 26.5L23 32.5L35 20"
+        stroke="url(#cg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <animate attributeName="stroke-dasharray" from="0 30" to="30 0" dur="0.6s" begin="0.8s" fill="freeze"/>
+        <animate attributeName="stroke-dashoffset" from="0" to="0" dur="0.6s" fill="freeze"/>
+      </path>
+      <defs>
+        <linearGradient id="sg" x1="6" y1="4" x2="46" y2="48" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#b47cff"/>
+          <stop offset="1" stop-color="#00e5ff"/>
+        </linearGradient>
+        <linearGradient id="cg" x1="17" y1="26" x2="35" y2="26" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#b47cff"/>
+          <stop offset="1" stop-color="#00e5ff"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="brand">Lino Security</div>
+  <h1>Verificação <span class="accent">Discord</span></h1>
+  <p class="desc">Para acessar o servidor, confirme sua identidade. Processo rápido e seguro.</p>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#si1)" stroke-width="1.8" stroke-linecap="round">
+          <path d="M15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-6-6z"/>
+          <polyline points="15 3 15 9 21 9"/>
+          <defs>
+            <linearGradient id="si1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#b47cff"/><stop offset="1" stop-color="#00e5ff"/>
+            </linearGradient>
+          </defs>
         </svg>
-        Verificar com Discord
-      </a>
-
-      <div class="footer">🔒 Seus dados estão protegidos · Lino Security</div>
+      </div>
+      <span class="step-label">Clique em verificar</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#si2)" stroke-width="1.8" stroke-linecap="round">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.013.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+          <defs>
+            <linearGradient id="si2" x1="0" y1="4" x2="24" y2="20" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#b47cff"/><stop offset="1" stop-color="#00e5ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="step-label">Autorize no Discord</span>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step">
+      <div class="step-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="url(#si3)" stroke-width="1.8" stroke-linecap="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+          <defs>
+            <linearGradient id="si3" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#b47cff"/><stop offset="1" stop-color="#00e5ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="step-label">Acesso liberado</span>
     </div>
   </div>
+
+  <!-- Botão -->
+  <a class="btn" href="https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify%20guilds.join">
+    <svg class="btn-discord-icon" viewBox="0 0 24 24" fill="white">
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.013.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+    </svg>
+    Verificar com Discord
+  </a>
+
+  <!-- Footer -->
+  <div class="footer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    Seus dados estão protegidos · Lino Security
+  </div>
+
+</div>
+
+<!-- Partículas -->
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(init) {
+      this.x = Math.random() * W;
+      this.y = init ? Math.random() * H : H + 10;
+      this.size = Math.random() * 1.4 + 0.4;
+      this.speed = Math.random() * 0.4 + 0.15;
+      this.opacity = Math.random() * 0.5 + 0.1;
+      this.color = Math.random() > 0.5 ? '124,77,255' : '0,229,255';
+      this.drift = (Math.random() - 0.5) * 0.3;
+    }
+    update() {
+      this.y -= this.speed;
+      this.x += this.drift;
+      this.opacity -= 0.0008;
+      if (this.y < -10 || this.opacity <= 0) this.reset(false);
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = \`rgba(${this.color},${this.opacity})\`;
+      ctx.fill();
+    }
+  }
+
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+</script>
+
 </body>
-</html>`);
+</html>
+`);
 });
 
 app.get('/callback', async (req, res) => {
